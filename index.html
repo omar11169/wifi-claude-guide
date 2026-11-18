@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta property="og:title" content="خلّ Claude يفحص الواي فاي — @code.sheikh">
+<meta property="og:description" content="الطريقة كاملة مع البرومبتات، ونسخة احتياطية وأمر يرجّع كل شي مثل ما كان">
+<title>Claude يفحص الواي فاي</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@700;900&family=Tajawal:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+:root{
+  --bg:#0E0D0C; --panel:#171513; --line:#2A2622; --fg:#F3ECE3; --muted:#A39A8F;
+  --amber:#F7A21B; --deep:#D9700A; --ok:#3DDC84; --blue:#0866FF; --bad:#FF6B5E;
+  --display:'Cairo','Tajawal',system-ui,sans-serif; --body:'Tajawal',system-ui,sans-serif;
+  --mono:'JetBrains Mono',Consolas,'Courier New',monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);font-size:18px;line-height:1.75;
+  background-image:linear-gradient(rgba(255,255,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.03) 1px,transparent 1px);
+  background-size:44px 44px}
+.wrap{max-width:760px;margin:0 auto;padding-block:40px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header{display:flex;flex-direction:column;gap:14px;padding-bottom:28px;border-bottom:1px solid var(--line)}
+.by{font-family:var(--mono);font-size:14px;color:var(--amber);direction:ltr;text-align:right}
+h1{font-family:var(--display);font-weight:900;font-size:clamp(32px,7vw,52px);line-height:1.2;margin:0;text-wrap:balance}
+h1 em{font-style:normal;color:var(--amber)}
+.lede{color:var(--muted);margin:0;max-width:60ch}
+.flow{display:flex;flex-wrap:wrap;gap:10px;align-items:center;font-size:15px;justify-content:flex-start}
+.flow span{padding:6px 14px;border:1.5px solid var(--line);border-radius:999px;background:var(--panel)}
+.flow i{color:var(--amber);font-style:normal}
+h2{font-family:var(--display);font-weight:700;font-size:24px;margin:0;text-wrap:balance}
+section{display:flex;flex-direction:column;gap:14px;padding-block:28px;border-bottom:1px solid var(--line)}
+.need{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.need div{padding:14px 16px;border:1px solid var(--line);border-radius:14px;background:var(--panel);min-width:0}
+.need b{display:block;font-family:var(--display);font-size:17px}
+.need small{color:var(--muted);font-size:15px}
+ol.steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:30px;counter-reset:s}
+ol.steps>li{counter-increment:s;display:grid;grid-template-columns:48px 1fr;gap:16px}
+ol.steps>li::before{content:counter(s);width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-family:var(--display);font-weight:900;font-size:22px;color:#160d02;background:linear-gradient(180deg,#FFC25A,var(--amber))}
+.step{display:flex;flex-direction:column;gap:10px;min-width:0}
+.step h3{font-family:var(--display);font-size:21px;margin:8px 0 0}
+.step p{margin:0;color:var(--muted)}
+.path{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:15px}
+.path span{padding:4px 12px;border-radius:8px;background:var(--panel);border:1px solid var(--line);direction:ltr;unicode-bidi:isolate}
+.path i{color:var(--amber);font-style:normal}
+/* mock UI window */
+.win{border:1px solid var(--line);border-radius:14px;background:#0A0908;overflow:hidden}
+.bar{display:flex;align-items:center;gap:6px;padding:10px 12px;border-bottom:1px solid var(--line);font-family:var(--mono);font-size:12px;color:var(--muted);direction:ltr}
+.bar b{width:10px;height:10px;border-radius:50%;display:inline-block}
+.bar .u{margin-left:8px}
+.ui{padding:16px;display:flex;flex-direction:column;gap:12px;direction:ltr;text-align:left;font-size:15px}
+.ui .lbl{font-weight:700;font-size:14px}
+.ui .fld{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--panel);color:var(--muted);min-width:0;overflow-wrap:anywhere}
+.ui .fld.rtl{direction:rtl;text-align:right;white-space:pre-line;color:var(--fg)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{padding:3px 10px;border-radius:8px;background:#26221E;color:var(--fg);font-size:14px}
+.chk{display:flex;gap:16px;flex-wrap:wrap}
+.chk span::before{content:"✓";display:inline-flex;width:18px;height:18px;margin-right:6px;border-radius:4px;background:var(--blue);color:#fff;font-size:12px;align-items:center;justify-content:center}
+.btns{display:flex;gap:8px;justify-content:flex-end}
+.btn{padding:6px 14px;border-radius:8px;border:1px solid var(--line);font-weight:700;font-size:14px}
+.btn.pri{background:var(--blue);border-color:var(--blue);color:#fff}
+.card{display:flex;align-items:center;justify-content:space-between;gap:12px;border:1px solid var(--line);border-radius:12px;padding:12px;background:var(--panel)}
+.card small{display:block;color:var(--muted);font-size:13px}
+.hl{outline:2px solid var(--amber);outline-offset:2px}
+/* copy block */
+.cmd{position:relative;border:1px solid var(--line);border-radius:14px;background:#0A0908;overflow:hidden}
+.cmd pre{margin:0;white-space:pre-wrap;direction:rtl;text-align:right;font-family:var(--body);font-size:16px;line-height:1.8;padding:52px 18px 18px;color:var(--fg)}
+.copy{position:absolute;top:10px;left:10px;font-family:var(--body);font-weight:700;font-size:14px;padding:6px 12px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:var(--fg);cursor:pointer}
+.copy:hover{border-color:var(--amber)}
+.copy:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+.copy.done{color:var(--ok);border-color:var(--ok)}
+.fill{color:var(--amber)}
+/* result mock */
+.phone{max-width:340px;border:1px solid var(--line);border-radius:22px;background:#0A0908;padding:14px;display:flex;flex-direction:column;gap:10px}
+.cm{font-size:15px;color:var(--muted)}
+.cm b{color:var(--fg)}
+.bub{align-self:flex-start;max-width:85%;padding:10px 14px;border-radius:18px;background:#262626;font-size:15px;line-height:1.6;white-space:pre-line}
+.bub a{overflow-wrap:anywhere}
+.note{padding:14px 16px;border-radius:14px;border:1px solid rgba(247,162,27,.35);background:rgba(247,162,27,.07);font-size:16px}
+.note b{color:var(--amber)}
+.warn{border-color:rgba(255,107,94,.4);background:rgba(255,107,94,.07)}
+.warn b{color:var(--bad)}
+ul.tips{margin:0;padding-right:20px;display:flex;flex-direction:column;gap:8px;color:var(--muted)}
+ul.tips b{color:var(--fg)}
+.vs{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.vs div{padding:14px 16px;border:1px solid var(--line);border-radius:14px;background:var(--panel)}
+.vs h3{margin:0 0 6px;font-family:var(--display);font-size:17px}
+.vs ul{margin:0;padding-right:18px;color:var(--muted);font-size:15px}
+code{font-family:var(--mono);font-size:.88em;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:1px 6px;direction:ltr;unicode-bidi:isolate}
+a{color:var(--amber)}
+footer{padding-top:24px;color:var(--muted);font-size:15px;display:flex;flex-direction:column;gap:6px}
+@media (prefers-reduced-motion:no-preference){.copy{transition:border-color .15s,color .15s}}
+
+.cmd pre.ltr{direction:ltr;text-align:left;font-family:var(--mono);font-size:14.5px;line-height:1.7;white-space:pre-wrap}
+.cmd .copy{right:auto}
+.tag{display:inline-block;font-family:var(--mono);font-size:13px;padding:2px 10px;border-radius:999px;border:1px solid var(--line);color:var(--muted);direction:ltr}
+table{width:100%;border-collapse:collapse;font-size:16px}
+td,th{padding:10px 8px;border-bottom:1px solid var(--line);text-align:right;vertical-align:top}
+th{font-family:var(--display);color:var(--amber);font-size:15px}
+td b{color:var(--fg)} td{color:var(--muted)}
+.tbl{overflow-x:auto}
+</style>
+</head>
+<body>
+<div class="wrap" dir="rtl">
+  <header>
+    <div class="by">@code.sheikh</div>
+    <h1>خلّ <em>Claude</em> يفحص الواي فاي</h1>
+    <p class="lede">بدل ما تتصل بالشركة: Claude يفحص الشبكة، يلقى وش اللي يبطّئها، ويعطيك الحل خطوة بخطوة. وقبل أي تغيير ياخذ نسخة احتياطية، وعندك أمر يرجّع كل شي مثل ما كان.</p>
+    <div class="flow"><span>🔍 فحص</span><i>←</i><span>💾 نسخة احتياطية</span><i>←</i><span>🛠️ إصلاح</span><i>←</i><span>📊 قبل / بعد</span></div>
+  </header>
+
+  <section>
+    <h2>وش تحتاج</h2>
+    <div class="need">
+      <div><b>Claude على الكمبيوتر</b><small>Claude Code، أو Claude ديسكتوب مع صلاحية تشغيل الأوامر</small></div>
+      <div><b>لابتوب على نفس الواي فاي</b><small>Windows أو Mac</small></div>
+      <div><b>صفحة الراوتر</b><small>غالباً <code>192.168.1.1</code>، واسم المستخدم والباسورد تحت الراوتر</small></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>الخطوات</h2>
+    <ol class="steps">
+      <li><div class="step">
+        <h3>سوّ سبيد تست</h3>
+        <p>افتح <a href="https://www.speedtest.net" target="_blank" rel="noopener">speedtest.net</a> وسجّل السرعة قبل. بتحتاجها عشان تقارن بعدين.</p>
+      </div></li>
+      <li><div class="step">
+        <h3>برومبت الفحص</h3>
+        <p>الصقه في Claude. هذا البرومبت <b>يقرأ بس</b>، ما يغيّر شي، ويحفظ نسخة احتياطية من إعداداتك في مجلد <code>wifi-backup</code> على سطح المكتب.</p>
+        <div class="cmd"><button class="copy" type="button">نسخ البرومبت</button><pre class="ltr">You are my network assistant. My WiFi feels slow. Help me find out why.
+
+RULES:
+- First, detect my OS (Windows or macOS) and use the right commands.
+- Read-only first: do NOT change any setting until I say &quot;yes&quot;.
+- Before ANY change, save a backup of my current settings to a folder
+  on my Desktop called &quot;wifi-backup&quot; (current DNS servers, IP config,
+  WiFi interface details, WiFi adapter settings). Tell me the path.
+
+DIAGNOSE:
+1. My current connection: band (2.4 / 5 GHz), channel, signal strength,
+   link speed.
+2. Scan nearby networks and tell me which channels are crowded.
+3. Compare my current DNS response time with 1.1.1.1 and 8.8.8.8.
+4. Ping my router and 1.1.1.1 for 20 seconds: show latency and packet loss.
+
+Then give me the top 3 fixes ranked by expected impact, in simple Arabic,
+and say which ones I do on the laptop and which ones in the router page.</pre></div>
+      </div></li>
+      <li><div class="step">
+        <h3>طبّق حل واحد بس</h3>
+        <p>Claude بيعطيك أفضل ٣ حلول. جرّب واحد، وقارن، وبعدها انتقل للثاني.</p>
+        <div class="cmd"><button class="copy" type="button">نسخ البرومبت</button><pre class="ltr">Apply fix number [1/2/3] only.
+- Confirm the backup in Desktop/wifi-backup exists first.
+- Show me the exact command before you run it and wait for my &quot;yes&quot;.
+- After the change, run the same tests again and show before/after in a table.</pre></div>
+      </div></li>
+      <li><div class="step">
+        <h3>سبيد تست مرة ثانية</h3>
+        <p>قارن الرقم الجديد بالقديم. إذا ما تحسّن، رجّع الإعداد وجرّب الحل اللي بعده.</p>
+      </div></li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>↩️ رجّع كل شي مثل ما كان</h2>
+    <p style="margin:0;color:var(--muted)">إذا ما عجبتك النتيجة، أو صار أي شي غريب، الصق هذا في Claude:</p>
+    <div class="cmd"><button class="copy" type="button">نسخ البرومبت</button><pre class="ltr">Undo everything you changed.
+Restore my network settings exactly as they were, using the backup in
+Desktop/wifi-backup (DNS, IP config, adapter settings).
+Then run the tests again and confirm everything matches the backup.</pre></div>
+    <p style="margin:0;color:var(--muted)">ولو تبي ترجّع الـ DNS يدوي بدون Claude:</p>
+    <p style="margin:0"><span class="tag">Windows: افتح Command Prompt كـ Administrator</span></p>
+    <div class="cmd"><button class="copy" type="button">نسخ</button><pre class="ltr">netsh interface ip set dns name=&quot;Wi-Fi&quot; source=dhcp
+ipconfig /flushdns</pre></div>
+    <p style="margin:0"><span class="tag">Mac: Terminal</span></p>
+    <div class="cmd"><button class="copy" type="button">نسخ</button><pre class="ltr">networksetup -setdnsservers Wi-Fi empty
+sudo dscacheutil -flushcache</pre></div>
+    <div class="note"><b>إعدادات الراوتر:</b> Claude ما يدخل الراوتر بنفسه. قبل ما تغيّر أي شي هناك، صوّر الشاشة. ولو خرّبت شي، ارجع للصورة وحط القيم نفسها.</div>
+  </section>
+
+  <section>
+    <h2>أشهر الأشياء اللي يلقاها</h2>
+    <div class="tbl"><table>
+      <tr><th>المشكلة</th><th>الحل</th></tr>
+      <tr><td><b>متصل على 2.4GHz</b></td><td>اتصل بشبكة الـ 5GHz، أسرع بكثير لو كنت قريب من الراوتر</td></tr>
+      <tr><td><b>القناة زحمة</b></td><td>من صفحة الراوتر غيّر القناة للأقل زحمة اللي يقترحها Claude</td></tr>
+      <tr><td><b>DNS بطيء</b></td><td>غيّره لـ <code>1.1.1.1</code> أو <code>8.8.8.8</code></td></tr>
+      <tr><td><b>الإشارة ضعيفة</b></td><td>غيّر مكان الراوتر: مرتفع، في النص، بعيد عن الجدران والميكرويف</td></tr>
+      <tr><td><b>الراوتر شغّال من زمان</b></td><td>رستارت للراوتر، وحدّث الـ firmware</td></tr>
+    </table></div>
+    <div class="note warn"><b>للأمانة:</b> Claude ما يزيد سرعة الباقة اللي دافع عليها. هو يشيل اللي يبطّئك عشان توصل لأقرب سرعة لباقتك. ولو السرعة واطية حتى والكيبل موصول، فالمشكلة من الشركة.</div>
+  </section>
+
+  <section>
+    <h2>نصايح أمان</h2>
+    <ul class="tips">
+      <li><b>لا تعطيه باسورد الراوتر.</b> إنت تدخل صفحة الراوتر وتغيّر بنفسك.</li>
+      <li><b>غيّر شي واحد كل مرة</b>، عشان تعرف وش اللي فرق.</li>
+      <li><b>اقرأ الأمر قبل ما تقول yes.</b> البرومبت يجبره ينتظر موافقتك.</li>
+    </ul>
+    <div class="note"><b>تعليق «واي فاي»</b> هو اللي أوصلك هنا 😉 تابع @code.sheikh عشان يوصلك الجديد 👋</div>
+  </section>
+
+  <footer>
+    <div dir="ltr" style="text-align:right">@code.sheikh — تقنية • أجهزة • ذكاء اصطناعي</div>
+  </footer>
+</div>
+<script>
+document.querySelectorAll('.copy').forEach(function(btn){
+  btn.addEventListener('click',function(){
+    var pre=btn.parentElement.querySelector('pre');var txt=pre.innerText;var label=btn.textContent;
+    function ok(){btn.textContent='تم النسخ ✓';btn.classList.add('done');setTimeout(function(){btn.textContent=label;btn.classList.remove('done')},1600)}
+    function fallback(){var r=document.createRange();r.selectNodeContents(pre);var s=getSelection();s.removeAllRanges();s.addRange(r);btn.textContent='حدّد وانسخ'}
+    try{navigator.clipboard.writeText(txt).then(ok,fallback)}catch(e){fallback()}
+  });
+});
+</script>
+</body>
+</html>
