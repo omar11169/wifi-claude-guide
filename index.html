@@ -183,6 +183,20 @@ sudo dscacheutil -flushcache</pre></div>
   </section>
 
   <section>
+    <h2>🔍 مين متصل على الواي فاي؟</h2>
+    <p style="margin:0;color:var(--muted)">اسأل Claude يطلّع لك كل الأجهزة المتصلة على شبكتك. هذا البرومبت يقرأ بس، وما يدخل الراوتر:</p>
+    <div class="cmd"><button class="copy" type="button">نسخ البرومبت</button><pre class="ltr">Who is connected to my WiFi right now?
+- Read-only: do NOT change anything and do NOT log into my router.
+- Detect my OS and list every device on my local network
+  (use arp -a and a ping sweep of my subnet).
+- For each device show: IP, MAC address, and the maker if you can
+  tell from the MAC (Apple, Samsung, TP-Link...).
+- Mark anything you can&#x27;t identify as &quot;unknown&quot; and tell me in
+  simple Arabic how to check it and what to do next.</pre></div>
+    <div class="note"><b>لقيت جهاز غريب؟</b> غيّر باسورد الواي فاي من صفحة الراوتر، وكل الأجهزة بتنفصل. بعدها رجّع أجهزتك بالباسورد الجديد.</div>
+  </section>
+
+  <section>
     <h2>أشهر الأشياء اللي يلقاها</h2>
     <div class="tbl"><table>
       <tr><th>المشكلة</th><th>الحل</th></tr>
